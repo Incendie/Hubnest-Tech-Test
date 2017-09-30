@@ -1,17 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<title>My Project</title>
 	<link rel="stylesheet" href="public/styles/style.css">
 </head>
+
 <body>
-
-	<div class="container">
-		<h1>Hello Drew</h1>
-	</div>
-
+	<div id="contacts"></div>
+	<form id="newEntry">
+		<label for="newName">New Entry</label>
+		<input type="text" id="newName" placeholder="Please enter a name">
+		<button type="submit">Add</button>
+	</form>
+	<script src="https://www.gstatic.com/firebasejs/4.4.0/firebase.js"></script>
+	<script>
+		// Initialize Firebase
+		var config = {
+			apiKey: "AIzaSyBqr49-eq-hCUgh5H0vlW_X6Uev_NgP3gQ",
+			authDomain: "hubnest-tech-challenge.firebaseapp.com",
+			databaseURL: "https://hubnest-tech-challenge.firebaseio.com",
+			projectId: "hubnest-tech-challenge",
+			storageBucket: "hubnest-tech-challenge.appspot.com",
+			messagingSenderId: "190243200429"
+		};
+		firebase.initializeApp(config);
+	</script>
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+	  crossorigin="anonymous"></script>
 	<script src="public/scripts/main.js"></script>
-	
+
 </body>
+
 </html>

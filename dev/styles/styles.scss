@@ -1,11 +1,15 @@
-@import 'partials/setup';
+@import "partials/setup";
 
 .container {
-	max-width: 900px;
-	margin: 0 auto;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 body {
-	background: darkcyan;
+  background: darkcyan;
 }
 
+.deleteContact,
+.deleteNum {
+  cursor: pointer;
+}
