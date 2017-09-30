@@ -1,4 +1,4 @@
-var hub = {};
+const hub = {};
 hub.contactsArray = [];
 hub.dBRef = firebase.database().ref();
 
@@ -8,7 +8,7 @@ hub.printCard = (name, key) => {
   let deleteContact = `<div class="deleteBtn deleteContact" data-name="${name}" data-key="${key}"><div class="deleteBtn__x"><span></span><span></span></div><p>Delete</p></div>`;
   let deleteNumber = `<div class="deleteBtn deleteNum"><div class="deleteBtn__x"><span></span><span></span></div><p>Delete</p></div>`;
   let select = `<select><option value="Home">Home</option><option value="Work">Work</option><option value="Cell">Cell</option><option value="Other">Other</option></select>`;
-  let input = `<input type="tel" size="20" minlength="8" maxlength="20" required placeholder="What is the phone #?">`;
+  let input = `<input type="text" required placeholder="What is the phone #?">`;
   let form = `<form id="newNum" data-key="${key}">${select}${input}<button type="submit">Add</button></form>`;
   let titleSection = `<h2>${name}</h2>${deleteContact}`;
 
@@ -17,9 +17,12 @@ hub.printCard = (name, key) => {
   let dBRefContact = firebase.database().ref(`${key}`);
 
   dBRefContact.on("value", entry => {
-    const dBData = entry.val();
+    let dBData = entry.val();
     for (let numKey in dBData) {
       if (numKey != "name" && numKey != "key") {
+        dBData[numKey].number = decodeURIComponent(
+          dBData[numKey].number
+        ).replace("%2E", ".");
         numbersSection += `<div class="numEntry"><p><span class="numType">${dBData[
           numKey
         ].type}</span>: <span class="phoneNum">${dBData[numKey]
@@ -49,20 +52,18 @@ hub.readDB = () => {
 
 //push a name to Firebase as a new entry
 hub.newEntry = () => {
-  $("#newEntry")
-    .unbind("submit")
-    .on("submit", e => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      let name = $("#newName").val();
-      let pushKey = hub.dBRef.push().key;
-      firebase
-        .database()
-        .ref(`/${pushKey}`)
-        .update({ name, numbers: {}, key: pushKey });
-      $("#newName").val("");
-      return false;
-    });
+  $("#newEntry").on("submit", e => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    let name = $("#newName").val();
+    let pushKey = hub.dBRef.push().key;
+    firebase
+      .database()
+      .ref(`/${pushKey}`)
+      .update({ name, numbers: {}, key: pushKey });
+    $("#newName").val("");
+    return false;
+  });
 };
 
 //push a number and its type to Firebase under the specific person's property
@@ -76,28 +77,20 @@ hub.newNum = () => {
     let number = $(this)
       .find("input")
       .val();
+    console.log(number);
     let contactKey = $(this).data("key");
     if (number.match(/[a-zA-Z]/) === null) {
-      let phone = { type, number };
-      let name = $(this).data("name");
-      let key = "";
-
-      //find the unique firebase key for this specific contact
-      hub.contactsArray.some(entry => {
-        if (entry.name === name) {
-          key = entry.key;
-          return key;
-        }
-      });
-
       //add the phone number and type to this contact
-      const dBRefContact = firebase.database().ref(`/${contactKey}`);
-      dBRefContact.once("value", snapshot => {
-        dBRefContact.push(phone);
-        $(this)
-          .find("input")
-          .val("");
-      });
+      let dBRefContact = firebase.database().ref(`/${contactKey}`);
+      let pushKey = dBRefContact.push().key;
+      number = encodeURIComponent(number).replace(/\./g, "%2E");
+      let phone = { type, number, key: pushKey };
+
+      dBRefContact.push(phone);
+
+      $(this)
+        .find("input")
+        .val("");
     } else {
       alert("Please enter a valid phone number");
       return false;
@@ -106,11 +99,12 @@ hub.newNum = () => {
 };
 
 hub.deleteEntry = () => {
-  $(document).on("click", ".deleteContact", function(e) {
+  $(document).one("click", ".deleteContact", function(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
 
     let key = $(this).data("key");
+    console.log("delete");
     firebase
       .database()
       .ref(`/${key}`)
@@ -119,43 +113,47 @@ hub.deleteEntry = () => {
 };
 
 hub.deleteNumber = () => {
-  $(document).on("click", ".deleteNum", function() {
-    let name = $(this)
-      .parent()
-      .parent()
-      .siblings(".contacts__person--heading")
-      .children("h2")
-      .text();
-    let number = $(this)
-      .siblings("p")
-      .children(".phoneNum")
-      .text();
+  $(document)
+    .unbind("click")
+    .on("click", ".deleteNum", function() {
+      let name = $(this)
+        .parent()
+        .parent()
+        .siblings(".contacts__person--heading")
+        .children("h2")
+        .text();
+      let number = $(this)
+        .siblings("p")
+        .children(".phoneNum")
+        .text();
+      number = encodeURIComponent(number).replace(/\./g, "%2E");
 
-    hub.dBRef.on("value", data => {
-      let entry = data.val();
+      hub.dBRef.on("value", data => {
+        let entry = data.val();
 
-      for (let key in entry) {
-        if (entry[key].name === name) {
-          let nameRef = firebase.database().ref(`/${key}`);
+        for (let key in entry) {
+          if (entry[key].name === name) {
+            let nameRef = firebase.database().ref(`/${key}`);
 
-          nameRef.on("value", contactData => {
-            let phoneEntry = contactData.val();
+            nameRef.on("value", contactData => {
+              let phoneEntry = contactData.val();
 
-            for (let numKey in phoneEntry) {
-              if (phoneEntry[numKey].number === number) {
-                firebase
-                  .database()
-                  .ref(`/${key}/${numKey}`)
-                  .remove();
-                break;
+              for (let numKey in phoneEntry) {
+                if (phoneEntry[numKey].number === number) {
+                  console.log("deleted");
+                  firebase
+                    .database()
+                    .ref(`/${key}/${numKey}`)
+                    .remove();
+                  break;
+                }
               }
-            }
-          });
-          break;
+            });
+            break;
+          }
         }
-      }
+      });
     });
-  });
 };
 
 hub.init = () => {
