@@ -5,12 +5,12 @@ hub.dBRef = firebase.database().ref();
 //component for outputting individual contact cards
 hub.printCard = name => {
   //structuring the output to the DOM
-  const deleteContact = `<div class="deleteBtn deleteContact" data-name="${name}"><div class="deleteBtn__x"></div><p>Delete</p></div>`;
-  const deleteNumber = `<div class="deleteBtn deleteNum"><div class="deleteBtn__x"></div><p>Delete</p></div>`;
-  const select = `<select><option value="Home">Home</option><option value="workNum">Work</option><option value="Cell">Cell</option><option value="Other">Other</option></select>`;
-  const input = `<input type="text" required placeholder="What is the phone #?">`;
-  const form = `<form id="newNum" data-name="${name}">${select}${input}<button type="submit">Add</button></form>`;
-  const titleSection = `<h2>${name}</h2>${deleteContact}`;
+  let deleteContact = `<div class="deleteBtn deleteContact" data-name="${name}"><div class="deleteBtn__x"><span></span><span></span></div><p>Delete</p></div>`;
+  let deleteNumber = `<div class="deleteBtn deleteNum"><div class="deleteBtn__x"><span></span><span></span></div><p>Delete</p></div>`;
+  let select = `<select><option value="Home">Home</option><option value="Work">Work</option><option value="Cell">Cell</option><option value="Other">Other</option></select>`;
+  let input = `<input type="text" required placeholder="What is the phone #?">`;
+  let form = `<form id="newNum" data-name="${name}">${select}${input}<button type="submit">Add</button></form>`;
+  let titleSection = `<h2>${name}</h2>${deleteContact}`;
 
   //find the firebase key for "name"
   let key = "";
@@ -22,18 +22,20 @@ hub.printCard = name => {
 
   //structure and output to DOM this contact's phone numbers
   let numbersSection = ``;
-  const dBRefContact = firebase.database().ref(`/${key}`);
+  let dBRefContact = firebase.database().ref(`/${key}`);
   dBRefContact.once("value", entry => {
     const dBData = entry.val();
     for (let numKey in dBData) {
       if (numKey !== "name") {
-        numbersSection += `<div class="numEntry"><p>${dBData[numKey]
-          .type}: ${dBData[numKey].number}</p>${deleteNumber}</div>`;
+        numbersSection += `<div class="numEntry"><p><span class="numType">${dBData[
+          numKey
+        ].type}</span>: <span class="phoneNum">${dBData[numKey]
+          .number}</span></p>${deleteNumber}</div>`;
       }
     }
   });
 
-  const sectionStructure = `<div class="contacts__person"><div class="contacts__person--heading">${titleSection}</div><div class="contacts__person--numbers">${numbersSection}</div>${form}</div>`;
+  let sectionStructure = `<div class="contacts__person"><div class="contacts__person--heading">${titleSection}</div><div class="contacts__person--numbers">${numbersSection}</div>${form}</div>`;
   $("#contacts").append(sectionStructure);
 };
 
@@ -57,7 +59,7 @@ hub.readDB = () => {
 hub.newEntry = () => {
   $("#newEntry").on("submit", e => {
     e.preventDefault();
-    const name = $("#newName").val();
+    let name = $("#newName").val();
     hub.dBRef.push({ name, numbers: {} });
     $(this).val("");
   });
@@ -67,13 +69,13 @@ hub.newEntry = () => {
 hub.newNum = () => {
   $(document).on("submit", "#newNum", function(e) {
     e.preventDefault();
-    const type = $(this)
+    let type = $(this)
       .find("select")
       .val();
-    const number = $(this)
+    let number = $(this)
       .find("input")
       .val();
-    const phone = { type, number };
+    let phone = { type, number };
 
     // const contactRef = firebase.database().ref();
     let name = $(this).data("name");
@@ -98,15 +100,63 @@ hub.newNum = () => {
 };
 
 hub.deleteEntry = () => {
-  $(document).on("click", ".deleteContact", () => {
-    const name = $(this).data("name");
+  $(document).on("click", ".deleteContact", function() {
+    let name = $(this)
+      .siblings("h2")
+      .text();
 
     hub.dBRef.on("value", data => {
-      const entry = data.val();
+      let entry = data.val();
 
       for (let key in entry) {
-        console.log(entry[key].name, name);
+        // console.log(entry[key].name, name);
         if (entry[key].name === name) {
+          firebase
+            .database()
+            .ref(`/${key}`)
+            .remove();
+          break;
+        }
+      }
+    });
+  });
+};
+
+hub.deleteNumber = () => {
+  $(document).on("click", ".deleteNum", function() {
+    let name = $(this)
+      .parent()
+      .parent()
+      .siblings(".contacts__person--heading")
+      .children("h2")
+      .text();
+    let number = $(this)
+      .siblings("p")
+      .children(".phoneNum")
+      .text();
+
+    hub.dBRef.on("value", data => {
+      let entry = data.val();
+
+      for (let key in entry) {
+        // console.log(entry[key].name, name);
+        if (entry[key].name === name) {
+          let nameRef = firebase.database().ref(`/${key}`);
+
+          nameRef.on("value", contactData => {
+            let phoneEntry = contactData.val();
+
+            for (let numKey in phoneEntry) {
+              if (phoneEntry[numKey].number === number) {
+                firebase
+                  .database()
+                  .ref(`/${key}/${numKey}`)
+                  .remove();
+                break;
+              }
+            }
+          });
+          break;
         }
       }
     });
@@ -118,6 +168,7 @@ hub.init = () => {
   hub.newEntry();
   hub.newNum();
   hub.deleteEntry();
+  hub.deleteNumber();
 };
 
 $(() => {

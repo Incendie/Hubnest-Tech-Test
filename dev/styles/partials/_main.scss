@@ -1,0 +1,50 @@
+.contacts__person--heading {
+  border-bottom: 2px solid black;
+  display: flex;
+  justify-content: space-between;
+}
+
+.deleteBtn {
+  display: flex;
+  flex-direction: row;
+  // flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
+.deleteBtn__x {
+  width: 40px;
+  height: 40px;
+  position: relative;
+
+  span {
+    background: red;
+    position: absolute;
+    width: 50px;
+    height: 4px;
+    transform-origin: left center;
+    left: 0;
+
+    &:first-child {
+      transform: rotate(45deg);
+      top: 5px;
+    }
+    &:last-child {
+      transform: rotate(-45deg);
+      top: 40px;
+    }
+  }
+}
+
+.contacts__person--numbers,
+#newNum {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.numEntry {
+  display: flex;
+  justify-content: space-between;
+}
+.deleteContact,
+.deleteNum {
+  cursor: pointer;
+}

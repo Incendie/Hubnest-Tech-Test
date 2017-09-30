@@ -8,12 +8,16 @@
 </head>
 
 <body>
-	<div id="contacts"></div>
-	<form id="newEntry">
-		<label for="newName">New Entry</label>
-		<input type="text" id="newName" placeholder="Please enter a name">
-		<button type="submit">Add</button>
-	</form>
+	<div class="wrapper">
+		<section id="contacts"></section>
+		<section id="newPerson">
+			<form id="newEntry">
+				<label for="newName">New Entry</label>
+				<input type="text" id="newName" placeholder="Please enter a name">
+				<button type="submit">Add</button>
+			</form>
+		</section>
+	</div>
 	<script src="https://www.gstatic.com/firebasejs/4.4.0/firebase.js"></script>
 	<script>
 		// Initialize Firebase
