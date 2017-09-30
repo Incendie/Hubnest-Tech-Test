@@ -1,4 +1,42 @@
+body {
+  background: #a2e8dd;
+}
+
 .wrapper {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+h2,
+p {
+  margin: 0;
+  color: #35524a;
+}
+
+h2 {
+  font-size: 50px;
+  font-family: "Playfair Display", serif;
+}
+
+p {
+  font-family: "Montserrat", sans-serif;
+}
+
+input,
+select,
+button {
+  padding: 10px;
+  height: 40px;
+  font-size: 20px;
+  border: none;
+  background: white;
+}
+
+input {
+  margin: 0 20px;
+}
+
+button {
+  width: 100px;
+  background: #32de8a;
 }

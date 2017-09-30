@@ -1,7 +1,23 @@
+.contacts {
+  padding: 80px 0;
+}
+
+.contacts__person {
+  padding: 60px 0;
+}
+
+.contacts__person--numbers {
+  padding: 40px 0;
+}
+
 .contacts__person--heading {
   border-bottom: 2px solid black;
   display: flex;
   justify-content: space-between;
+
+  p {
+    font-sizE: 30px;
+  }
 }
 
 .deleteBtn {
@@ -9,12 +25,14 @@
   flex-direction: row;
   // flex-wrap: nowrap;
   justify-content: space-between;
+  align-items: center;
 }
 
 .deleteBtn__x {
   width: 40px;
   height: 40px;
   position: relative;
+  margin-right: 15px;
 
   span {
     background: red;
@@ -26,12 +44,21 @@
 
     &:first-child {
       transform: rotate(45deg);
-      top: 5px;
+      top: 1px;
     }
     &:last-child {
       transform: rotate(-45deg);
-      top: 40px;
+      top: 35px;
     }
+  }
+}
+
+.deleteNum span {
+  &:first-child {
+    top: -12px;
+  }
+  &:last-child {
+    top: 23px;
   }
 }
 
@@ -40,11 +67,41 @@
   max-width: 800px;
   margin: 0 auto;
 }
+
 .numEntry {
   display: flex;
   justify-content: space-between;
+
+  p {
+    font-size: 25px;
+    margin-bottom: 30px;
+  }
+}
+
+.numType {
+  width: 200px;
 }
 .deleteContact,
 .deleteNum {
   cursor: pointer;
+}
+
+#newPerson {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  padding: 40px 0;
+
+  label {
+    font-size: 30px;
+  }
+
+  form {
+    display: block;
+  }
+
+  // input {
+  //   min-width: 800px;
+  // }
 }

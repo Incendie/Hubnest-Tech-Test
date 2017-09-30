@@ -1,32 +1,25 @@
-const hub = {};
+var hub = {};
 hub.contactsArray = [];
 hub.dBRef = firebase.database().ref();
 
 //component for outputting individual contact cards
-hub.printCard = name => {
+hub.printCard = (name, key) => {
   //structuring the output to the DOM
-  let deleteContact = `<div class="deleteBtn deleteContact" data-name="${name}"><div class="deleteBtn__x"><span></span><span></span></div><p>Delete</p></div>`;
+  let deleteContact = `<div class="deleteBtn deleteContact" data-name="${name}" data-key="${key}"><div class="deleteBtn__x"><span></span><span></span></div><p>Delete</p></div>`;
   let deleteNumber = `<div class="deleteBtn deleteNum"><div class="deleteBtn__x"><span></span><span></span></div><p>Delete</p></div>`;
   let select = `<select><option value="Home">Home</option><option value="Work">Work</option><option value="Cell">Cell</option><option value="Other">Other</option></select>`;
-  let input = `<input type="text" required placeholder="What is the phone #?">`;
-  let form = `<form id="newNum" data-name="${name}">${select}${input}<button type="submit">Add</button></form>`;
+  let input = `<input type="tel" size="20" minlength="8" maxlength="20" required placeholder="What is the phone #?">`;
+  let form = `<form id="newNum" data-key="${key}">${select}${input}<button type="submit">Add</button></form>`;
   let titleSection = `<h2>${name}</h2>${deleteContact}`;
-
-  //find the firebase key for "name"
-  let key = "";
-  hub.contactsArray.forEach(entry => {
-    if (entry.name === name) {
-      key = entry.key;
-    }
-  });
 
   //structure and output to DOM this contact's phone numbers
   let numbersSection = ``;
-  let dBRefContact = firebase.database().ref(`/${key}`);
-  dBRefContact.once("value", entry => {
+  let dBRefContact = firebase.database().ref(`${key}`);
+
+  dBRefContact.on("value", entry => {
     const dBData = entry.val();
     for (let numKey in dBData) {
-      if (numKey !== "name") {
+      if (numKey != "name" && numKey != "key") {
         numbersSection += `<div class="numEntry"><p><span class="numType">${dBData[
           numKey
         ].type}</span>: <span class="phoneNum">${dBData[numKey]
@@ -48,77 +41,80 @@ hub.readDB = () => {
     for (let key in dBData) {
       hub.contactsArray.push({ name: dBData[key].name, key });
     }
-    // console.log(hub.contactsArray);
     for (let i = 0; i < hub.contactsArray.length; i++) {
-      hub.printCard(hub.contactsArray[i].name);
+      hub.printCard(hub.contactsArray[i].name, hub.contactsArray[i].key);
     }
   });
 };
 
 //push a name to Firebase as a new entry
 hub.newEntry = () => {
-  $("#newEntry").on("submit", e => {
-    e.preventDefault();
-    let name = $("#newName").val();
-    hub.dBRef.push({ name, numbers: {} });
-    $(this).val("");
-  });
+  $("#newEntry")
+    .unbind("submit")
+    .on("submit", e => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      let name = $("#newName").val();
+      let pushKey = hub.dBRef.push().key;
+      firebase
+        .database()
+        .ref(`/${pushKey}`)
+        .update({ name, numbers: {}, key: pushKey });
+      $("#newName").val("");
+      return false;
+    });
 };
 
 //push a number and its type to Firebase under the specific person's property
 hub.newNum = () => {
   $(document).on("submit", "#newNum", function(e) {
     e.preventDefault();
+    e.stopImmediatePropagation();
     let type = $(this)
       .find("select")
       .val();
     let number = $(this)
       .find("input")
       .val();
-    let phone = { type, number };
+    let contactKey = $(this).data("key");
+    if (number.match(/[a-zA-Z]/) === null) {
+      let phone = { type, number };
+      let name = $(this).data("name");
+      let key = "";
 
-    // const contactRef = firebase.database().ref();
-    let name = $(this).data("name");
-    let key = "";
+      //find the unique firebase key for this specific contact
+      hub.contactsArray.some(entry => {
+        if (entry.name === name) {
+          key = entry.key;
+          return key;
+        }
+      });
 
-    //find the unique firebase key for this specific contact
-    hub.contactsArray.forEach(entry => {
-      if (entry.name === name) {
-        key = entry.key;
-      }
-    });
-
-    //add the phone number and type to this contact
-    const dBRefContact = firebase.database().ref(`/${key}`);
-    dBRefContact.once("value").then(() => {
-      dBRefContact.push(phone);
-      $(this)
-        .find("input")
-        .val("");
-    });
+      //add the phone number and type to this contact
+      const dBRefContact = firebase.database().ref(`/${contactKey}`);
+      dBRefContact.once("value", snapshot => {
+        dBRefContact.push(phone);
+        $(this)
+          .find("input")
+          .val("");
+      });
+    } else {
+      alert("Please enter a valid phone number");
+      return false;
+    }
   });
 };
 
 hub.deleteEntry = () => {
-  $(document).on("click", ".deleteContact", function() {
-    let name = $(this)
-      .siblings("h2")
-      .text();
+  $(document).on("click", ".deleteContact", function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
 
-    hub.dBRef.on("value", data => {
-      let entry = data.val();
-
-      for (let key in entry) {
-        // console.log(entry[key].name, name);
-        if (entry[key].name === name) {
-          firebase
-            .database()
-            .ref(`/${key}`)
-            .remove();
-          break;
-        }
-      }
-    });
+    let key = $(this).data("key");
+    firebase
+      .database()
+      .ref(`/${key}`)
+      .remove();
   });
 };
 
@@ -139,7 +135,6 @@ hub.deleteNumber = () => {
       let entry = data.val();
 
       for (let key in entry) {
-        // console.log(entry[key].name, name);
         if (entry[key].name === name) {
           let nameRef = firebase.database().ref(`/${key}`);
 
